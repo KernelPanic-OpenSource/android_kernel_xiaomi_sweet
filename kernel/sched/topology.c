@@ -1276,6 +1276,9 @@ sd_init(struct sched_domain_topology_level *tl,
 	/* Apply detected topology flags */
 	sd_flags |= dflags;
 
+	/* Apply detected topology flags */
+	sd_flags |= dflags;
+
 	*sd = (struct sched_domain){
 		.min_interval		= sd_weight,
 		.max_interval		= 2*sd_weight,
