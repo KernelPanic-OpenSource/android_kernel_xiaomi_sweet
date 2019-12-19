@@ -56,7 +56,6 @@ extern int goodix_i2c_write(struct goodix_ts_device *dev, unsigned int reg, unsi
 extern void touch_irq_boost(void);
 #endif
 
-extern void lpm_disable_for_input(bool on);
 static int goodix_ts_remove(struct platform_device *pdev);
 int goodix_start_later_init(struct goodix_ts_core *ts_core);
 void goodix_ts_dev_release(void);
@@ -1190,7 +1189,6 @@ static void goodix_ts_report_finger(struct input_dev *dev,
 		input_report_key(dev, BTN_TOUCH, 1);
 	else if (!touch_num) {
 		input_report_key(dev, BTN_TOUCH, 0);
-		lpm_disable_for_input(false);
 	}
 
 	pre_fin = touch_num;
@@ -1272,7 +1270,6 @@ static irqreturn_t goodix_ts_threadirq_func(int irq, void *data)
 	}
 	mutex_unlock(&goodix_modules.mutex);
 
-	lpm_disable_for_input(true);
 	/* read touch data from touch device */
 	r = ts_dev->hw_ops->event_handler(ts_dev, ts_event);
 	if (likely(r >= 0)) {
@@ -1886,7 +1883,6 @@ static void goodix_ts_release_connects(struct goodix_ts_core *core_data)
 	}
 	input_report_key(input_dev, BTN_INFO, 0);
 	input_sync(input_dev);
-	lpm_disable_for_input(false);
 	ts_info("release all finger!");
 }
 
