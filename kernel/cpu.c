@@ -1034,6 +1034,12 @@ static int do_cpu_down(unsigned int cpu, enum cpuhp_state target)
 	struct cpumask newmask;
 	int err;
 
+	if (cpu == cpumask_first(cpu_perf_mask) ||
+		cpu == cpumask_first(cpu_lp_mask)) {
+		pr_err("trying to take down core%i\n", cpu);
+		return -EINVAL;
+	}
+
 	cpumask_andnot(&newmask, cpu_online_mask, cpumask_of(cpu));
 
 	/* One big cluster CPU and one little cluster CPU must remain online */
