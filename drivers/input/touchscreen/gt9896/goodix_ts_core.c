@@ -51,11 +51,6 @@
 #define PANEL_ORIENTATION_DEGREE_270	3	/* anticlockwise 270 degrees */
 
 extern int goodix_i2c_write(struct goodix_ts_device *dev, unsigned int reg, unsigned char *data, unsigned int len);
-
-#ifdef CONFIG_CPU_BOOST
-extern void touch_irq_boost(void);
-#endif
-
 static int goodix_ts_remove(struct platform_device *pdev);
 int goodix_start_later_init(struct goodix_ts_core *ts_core);
 void goodix_ts_dev_release(void);
@@ -1250,10 +1245,6 @@ static irqreturn_t goodix_ts_threadirq_func(int irq, void *data)
 			ts_err("system can't finished resuming procedure");
 		}
 	}
-#endif
-
-#ifdef CONFIG_CPU_BOOST
-	touch_irq_boost();
 #endif
 
 	/* inform external module */
