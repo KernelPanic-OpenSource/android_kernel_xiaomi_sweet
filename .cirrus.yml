@@ -1,0 +1,62 @@
+env:
+    CIRRUS_CLONE_DEPTH: 1
+    CIRRUS_WORKING_DIR: "/tmp/ci"
+    TOKEN: "ENCRYPTED[9aaf5d478b7ed755a49ec6f9307c22a3cc571118818fb7f4152931262f0705d7818e0ab378e044ec3f23ca9ea0955e86]"
+    EMAIL: "ENCRYPTED[3bbee728d0fdd7bb88c7fd907e3e28fc5d73ebc68d73ab8b7aa9e13d5697195f4fed2feb667c845357a063887c2925c2]"
+    UNAME: "ENCRYPTED[9ef2cd60d778d03e947a740930e0c5093e08a965d7568382447fa2cc5ec9ed47e4543669a3ad0b25061506f22c45fc55]"
+task:
+  name: master
+  timeout_in: 2h
+  container:
+    image: dopaemon/bionic:latest
+    cpu: 4
+    memory: 8G
+  packages_script:
+    - rm -rf *
+    - sudo apt update
+    - sudo apt-get install -y zip wget ccache rclone git-lfs bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libssl-dev libwxgtk3.0-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev pigz
+  github_script:
+    - git config --global user.name "$UNAME"
+    - git config --global user.email "$EMAIL"
+  cfolder_script:
+    - mkdir -p /tmp/ci/Kernel
+  clone_script:
+    - cd /tmp/ci/Kernel
+    - git clone -b master --single-branch --depth="1" https://github.com/KernelPanic-OpenSource/android_kernel_xiaomi_sweet.git /tmp/ci/Kernel/Source
+    - git clone -b master --single-branch --depth="1" https://github.com/kdrag0n/proton-clang.git /tmp/ci/Kernel/clang
+  export_script:
+    - touch ~/.kernel
+    - echo "export NAME="Doraemon-Kernel-$(date +"%d%m%Y")"" >> ~/.kernel
+    - echo "export TIME="$(date +"%d%m%Y")"" >> ~/.kernel
+    - echo "export CC=clang" >> ~/.kernel
+    - echo "export ARCH=arm64" >> ~/.kernel
+    - echo "export SUBARCH=arm64" >> ~/.kernel
+    - echo "export DTC_EXT=dtc"
+    - echo "export CROSS_COMPILE=aarch64-linux-gnu-" >> ~/.kernel
+    - echo "export CROSS_COMPILE_ARM32=arm-linux-gnueabi-" >> ~/.kernel
+    - echo "export PATH="/tmp/ci/Kernel/clang/bin:${PATH}"" >> ~/.kernel
+  kernel_script:
+    - source ~/.kernel
+    - cd /tmp/ci/Kernel/Source
+    - export D='"'
+    - echo CONFIG_LOCALVERSION="$D""$NAME""$D" >> arch/arm64/configs/vendor/sweet_user_defconfig
+  compile_script:
+    - source ~/.kernel
+    - cd /tmp/ci/Kernel/Source
+    - make O=out sweet_user_defconfig
+    - make -j$(nproc --all) O=out ARCH=arm64 CC=clang CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi- LLVM=llvm- AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip |& tee ~/$TIME.txt
+  flashable_script:
+    - source ~/.kernel
+    - mkdir -p /tmp/ci/flashable
+    - cd /tmp/ci/flashable
+    - wget https://github.com/tfausak/github-release/releases/download/2.0.0.0/github-release-2.0.0.0-ubuntu
+    - mv github-release-2.0.0.0-ubuntu release
+    - chmod +x release
+    - git clone -b sweet --depth="1" https://github.com/KernelPanic-OpenSource/flashable.git zip
+    - cp -r /tmp/ci/Kernel/Source/out/arch/arm64/boot/Image.gz-dtb /tmp/ci/flashable/zip/
+    - cd zip
+    - zip -rv9 "$NAME" *
+  upload_script:
+    - source ~/.kernel
+    - cd /tmp/ci/flashable/zip
+    - ./release upload --token '$TOKEN' --owner 'KernelPanic-OpenSource' --repo 'android_kernel_xiaomi_sweet' --tag '$TIME' --file '/tmp/ci/flashable/zip/$NAME' --name '$NAME'
