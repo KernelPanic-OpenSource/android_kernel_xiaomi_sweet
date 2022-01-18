@@ -3335,7 +3335,7 @@ else
 endif
 
 # inject some build related information
-ifeq ($(CONFIG_BUILD_TAG), y)
+ifeq ($(CONFIG_BUILD_TAG), n)
 CLD_CHECKOUT = $(shell cd "$(WLAN_ROOT)" && \
 	git reflog | grep -vm1 "}: cherry-pick: " | grep -oE ^[0-f]+)
 CLD_IDS = $(shell cd "$(WLAN_ROOT)" && \
