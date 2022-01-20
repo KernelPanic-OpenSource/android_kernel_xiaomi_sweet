@@ -63,7 +63,7 @@ task:
     - source ~/.kernel
     - cd /tmp/ci/flashable/zip/
     - curl -sLo zipsigner-4.0.jar https://github.com/baalajimaestro/AnyKernel3/raw/master/zipsigner-4.0.jar
-    - jar java -jar zipsigner-4.0.jar "$NAME".zip "$NAME"-signed.zip
+    - java -jar zipsigner-4.0.jar "$NAME".zip "$NAME"-signed.zip
     - echo "export ZIP_NAME=$NAME-signed.zip" >> ~/.kernel
   telegram_script:
     - source ~/.kernel
