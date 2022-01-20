@@ -4,6 +4,7 @@ env:
     TOKEN: "ENCRYPTED[9aaf5d478b7ed755a49ec6f9307c22a3cc571118818fb7f4152931262f0705d7818e0ab378e044ec3f23ca9ea0955e86]"
     EMAIL: "ENCRYPTED[3bbee728d0fdd7bb88c7fd907e3e28fc5d73ebc68d73ab8b7aa9e13d5697195f4fed2feb667c845357a063887c2925c2]"
     UNAME: "ENCRYPTED[9ef2cd60d778d03e947a740930e0c5093e08a965d7568382447fa2cc5ec9ed47e4543669a3ad0b25061506f22c45fc55]"
+    TLGTK: "ENCRYPTED[213e32fa8322b178aa2767dc48a37d3a71f87742c45f14ba09d9799b615a6a3857e8e219c30dc7cfb566b0aecf427a98]"
 task:
   name: master
   timeout_in: 2h
@@ -50,5 +51,23 @@ task:
     - curl https://android.googlesource.com/platform/external/avb/+/refs/heads/master/avbtool.py?format=TEXT | base64 --decode > avbtool.py
     - chmod +x avbtool.py
     - python3 avbtool.py add_hash_footer --image dtbo.img --partition_size=33554432 --partition_name dtbo
+  flashable_script:
+    - source ~/.kernel
+    - mkdir -p /tmp/ci/flashable
+    - cd /tmp/ci/flashable
+    - git clone -b sweet --depth="1" https://github.com/KernelPanic-OpenSource/flashable.git zip
+    - cp -r /tmp/ci/Kernel/Source/out/arch/arm64/boot/Image.gz /tmp/ci/flashable/zip/
+    - cd zip
+    - zip -rv9 "$NAME".zip *
+  zipSigner_script:
+    - source ~/.kernel
+    - cd /tmp/ci/flashable/zip/
+    - curl -sLo zipsigner-4.0.jar https://github.com/baalajimaestro/AnyKernel3/raw/master/zipsigner-4.0.jar
+    - jar java -jar zipsigner-4.0.jar "$NAME".zip "$NAME"-signed.zip
+    - echo "export ZIP_NAME=$NAME-signed.zip" >> ~/.kernel
+  telegram_script:
+    - source ~/.kernel
+    - curl -F document=@"/tmp/ci/flashable/zip/$ZIP_NAME" https://api.telegram.org/bot$TLGTK/sendDocument?chat_id="1101276955"
   checkout_script:
     - ls /tmp/ci/Kernel/Source/out/arch/arm64/boot/
+    - ls /tmp/ci/flashable/zip/
