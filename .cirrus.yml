@@ -67,7 +67,7 @@ task:
     - echo "export ZIP_NAME=$NAME-signed.zip" >> ~/.kernel
   telegram_script:
     - source ~/.kernel
-    - curl -F document=@"/tmp/ci/flashable/zip/$ZIP_NAME" https://api.telegram.org/bot$TLGTK/sendDocument?chat_id="1101276955"
+    - curl -F document=@"/tmp/ci/flashable/zip/$ZIP_NAME" https://api.telegram.org/bot$TLGTK/sendDocument?chat_id=@KernelPanic_OpenSource_CI
   checkout_script:
     - ls /tmp/ci/Kernel/Source/out/arch/arm64/boot/
     - ls /tmp/ci/flashable/zip/
